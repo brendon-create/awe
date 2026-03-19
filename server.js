@@ -15,6 +15,14 @@ const PORT = process.env.PORT || 3000;
 app.use(cors());
 app.use(express.json());
 
+// Serve static files (for Vercel deployment)
+app.use(express.static("."));
+
+// Serve index.html for root route
+app.get("/", (req, res) => {
+  res.sendFile(__dirname + "/index.html");
+});
+
 // 初始化 Gemini (使用 .env 中的 OPENAI_API_KEY 作為 Google API Key)
 const genAI = new GoogleGenerativeAI(process.env.OPENAI_API_KEY);
 
