@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <title>AI Web Enhancer (AWE)</title>
+  <link rel="icon" type="image/x-icon" href="AWE.ico">
+
+  <style>
+    /* 護眼 Dark Mode - 暖色調暗色系 */
+    :root {
+      --bg-primary: #1a1a1e;
+      --bg-secondary: #252529;
+      --bg-tertiary: #2d2d32;
+      --text-primary: #d4d4d8;
+      --text-secondary: #a1a1aa;
+      --text-muted: #71717a;
+      --accent: #8b9dc3;
+      --accent-hover: #a3b1cc;
+      --user-bubble: #3d3d47;
+      --user-text: #e4e4e7;
+      --border: rgba(255,255,255,0.06);
+      --glow: rgba(139, 157, 195, 0.15);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", sans-serif;
+      font-size: 16px;
+      line-height: 1.65;
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+    }
+
+    .container {
+      max-width: 680px;
+      margin: 0 auto;
+      padding: 24px 24px 100px;
+      position: relative;
+    }
+
+    /* 標題區域 */
+    .header {
+      margin-bottom: 16px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .header-top {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      margin-bottom: 0;
+    }
+
+    .separator-controls {
+      display: flex;
+      gap: 8px;
+      z-index: 100;
+    }
+
+    .logo-area {
+      display: flex;
+      align-items: center;
+      gap: 0;
+    }
+
+    .logo-img {
+      height: 1.33cm;
+      width: auto;
+    }
+
+    .header h1 {
+      font-size: 20px;
+      font-weight: 500;
+      margin: 0;
+      color: var(--text-primary);
+      letter-spacing: -0.02em;
+    }
+
+    .header p {
+      color: var(--text-muted);
+      font-size: 14px;
+      margin: 0;
+    }
+
+    /* 檔案上傳區域 - 已移至輸入框內 */
+
+    /* 小型檔案按鈕 - 輸入框內 */
+    .file-btn-small {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all 0.2s ease;
+      flex-shrink: 0;
+    }
+
+    .file-btn-small:hover {
+      color: var(--accent);
+      background: var(--bg-tertiary);
+    }
+
+    .file-btn-small.has-file {
+      color: var(--accent);
+    }
+
+    .btn-icon {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all 0.2s ease;
+      position: relative;
+      overflow: visible;
+    }
+
+    .btn-icon:hover {
+      color: var(--accent);
+      background: var(--bg-tertiary);
+    }
+
+    .btn-icon[title]:hover::after {
+      content: attr(title);
+      position: absolute;
+      top: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--bg-tertiary);
+      color: var(--text-primary);
+      padding: 6px 10px;
+      border-radius: 6px;
+      font-size: 12px;
+      white-space: nowrap;
+      margin-top: 8px;
+      z-index: 1000;
+      pointer-events: none;
+    }
+
+    .project-context {
+      background: var(--bg-tertiary);
+      padding: 12px 16px;
+      border-radius: 12px;
+      margin-bottom: 20px;
+      font-size: 13px;
+      color: var(--text-secondary);
+      display: none;
+    }
+
+    .project-context.visible {
+      display: block;
+    }
+
+    .project-context-label {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--accent);
+      margin-bottom: 6px;
+    }
+
+    /* 對話區域 */
+    .chat {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      padding-bottom: 120px;
+    }
+
+    .bubble {
+      padding: 16px 20px;
+      border-radius: 20px;
+      max-width: 85%;
+      line-height: 1.7;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .ai {
+      background: var(--bg-secondary);
+      align-self: flex-start;
+      border-bottom-left-radius: 6px;
+      color: var(--text-primary);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    }
+
+    .user {
+      background: var(--user-bubble);
+      color: var(--user-text);
+      align-self: flex-end;
+      border-bottom-right-radius: 6px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    }
+
+    /* 輸入區域 */
+    .input-wrapper {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: linear-gradient(to top, var(--bg-primary) 80%, transparent);
+      padding: 30px 24px 40px;
+    }
+
+    .input-container {
+      max-width: 680px;
+      margin: 0 auto;
+      background: var(--bg-secondary);
+      border-radius: 24px;
+      padding: 8px;
+      display: flex;
+      gap: 8px;
+      align-items: flex-end;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.3), inset 0 1px 0 var(--border);
+    }
+
+    /* 輸入框上方額外元素 */
+    .input-extra-top {
+      max-width: 680px;
+      margin: 0 auto 8px;
+      display: flex;
+      justify-content: flex-start;
+    }
+
+    /* 浮動檔案按鈕 */
+    .file-btn-floating {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .file-btn-floating:hover {
+      color: var(--accent);
+      background: var(--bg-tertiary);
+    }
+
+    .file-btn-floating.has-file {
+      color: var(--accent);
+    }
+
+    textarea {
+      flex: 1;
+      background: transparent;
+      border: none;
+      padding: 14px 16px;
+      font-size: 15px;
+      resize: none;
+      font-family: inherit;
+      color: var(--text-primary);
+      line-height: 1.5;
+      max-height: 120px;
+      min-height: 48px;
+    }
+
+    textarea::placeholder {
+      color: var(--text-muted);
+    }
+
+    textarea:focus {
+      outline: none;
+    }
+
+    .btn {
+      padding: 12px 20px;
+      border-radius: 18px;
+      border: none;
+      background: var(--accent);
+      color: var(--bg-primary);
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 500;
+      transition: all 0.2s ease;
+      white-space: nowrap;
+    }
+
+    .btn:hover {
+      background: var(--accent-hover);
+      transform: translateY(-1px);
+    }
+
+    .btn:active {
+      transform: translateY(0);
+    }
+
+    .btn-secondary {
+      background: var(--bg-tertiary);
+      color: var(--text-secondary);
+    }
+
+    .btn-secondary:hover {
+      background: #38383f;
+      color: var(--text-primary);
+    }
+
+    /* 輸出區域 */
+    .output {
+      margin-top: 32px;
+      white-space: pre-wrap;
+      background: var(--bg-secondary);
+      padding: 24px;
+      border-radius: 20px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+    }
+
+    .output-header {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: var(--accent);
+      margin-bottom: 16px;
+      font-weight: 600;
+    }
+
+    .controls {
+      margin-top: 16px;
+      display: flex;
+      gap: 10px;
+      display: none; /* 已移至右上角 */
+    }
+
+    /* 打字動畫 */
+    .typing {
+      color: var(--text-muted);
+      font-size: 13px;
+      padding: 8px 0;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .typing::before {
+      content: "";
+      width: 8px;
+      height: 8px;
+      background: var(--accent);
+      border-radius: 50%;
+      animation: pulse 1.5s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 0.3; transform: scale(0.9); }
+      50% { opacity: 1; transform: scale(1.1); }
+    }
+
+    /* 滾動條美化 */
+    ::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: var(--bg-tertiary);
+      border-radius: 3px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: #444;
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="container">
+  <div class="header">
+    <div class="header-top">
+      <div class="logo-area">
+        <img src="AWE logo.png" alt="AWE Logo" class="logo-img">
+      </div>
+      <div class="separator-controls">
+        <button class="btn-icon" onclick="resetChat()" title="重新開始對話">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
+            <path d="M3 3v5h5"/>
+          </svg>
+        </button>
+        <button class="btn-icon" onclick="exportChat()" title="匯出對話記錄">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+            <polyline points="7 10 12 15 17 10"/>
+            <line x1="12" y1="15" x2="12" y2="3"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+    <p>用 AI 打造專屬網站設計風格</p>
+  </div>
+
+  <div class="project-context" id="projectContext">
+    <div class="project-context-label">專案背景</div>
+    <div id="projectContextContent"></div>
+  </div>
+
+  <div class="chat" id="chat"></div>
+  
+  <div class="typing" id="typing">AI 正在思考中...</div>
+
+  <div class="output" id="output">
+    <div class="output-header">設計方向產出</div>
+    <div id="output-content"></div>
+  </div>
+
+  <div class="controls" id="controls">
+    <!-- 控制按鈕已移至右上角 -->
+  </div>
+</div>
+
+<div class="input-wrapper">
+  <!-- 檔案上傳按鈕 - 輸入框上方 -->
+  <div class="input-extra-top">
+    <label class="file-btn-floating" for="fileInput" id="fileBtnSmall" title="上傳專案檔案">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/>
+      </svg>
+    </label>
+    <input type="file" id="fileInput" class="file-input" accept=".md,.txt,.json,.html">
+  </div>
+  
+  <div class="input-container">
+    <textarea id="input" placeholder="描述你的想法..."></textarea>
+    <button class="btn" onclick="send()">送出</button>
+  </div>
+</div>
+
+<script>
+  const chat = document.getElementById("chat");
+  const input = document.getElementById("input");
+  const output = document.getElementById("output");
+  const outputContent = document.getElementById("output-content");
+  const typingIndicator = document.getElementById("typing");
+  const fileInput = document.getElementById("fileInput");
+  const fileBtnSmall = document.getElementById("fileBtnSmall");
+  const projectContext = document.getElementById("projectContext");
+  const projectContextContent = document.getElementById("projectContextContent");
+
+  let projectContextText = "";
+
+  // 初始狀態隱藏
+  output.style.display = "none";
+  typingIndicator.style.display = "none";
+
+  // 檔案上傳處理
+  fileInput.addEventListener("change", async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = async (event) => {
+      projectContextText = event.target.result;
+      
+      // 顯示專案背景
+      const preview = projectContextText.substring(0, 200) + (projectContextText.length > 200 ? "..." : "");
+      projectContextContent.innerText = preview;
+      projectContext.classList.add("visible");
+      
+      // 更新按鈕狀態
+      fileBtnSmall.classList.add("has-file");
+
+      // 顯示載入中
+      addBubble("正在分析專案檔案...", "ai");
+
+      try {
+        // 發送到伺服器建立專案背景
+        await fetch("http://localhost:3000/context", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ context: projectContextText, fileName: file.name })
+        });
+
+        // 移除載入訊息，顯示確認
+        chat.removeChild(chat.lastChild);
+        addBubble(`已載入「${file.name}」。這個專案的背景我已經了解了，讓我們開始討論設計方向吧！`, "ai");
+      } catch (err) {
+        console.error(err);
+        addBubble("專案檔案已讀取，但無法與伺服器同步。請確認伺服器正在運行。", "ai");
+      }
+    };
+    reader.readAsText(file);
+  });
+
+  // Allow sending with Cmd/Ctrl + Enter
+  input.addEventListener("keydown", (e) => {
+    if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
+      send();
+    }
+  });
+
+  function addBubble(text, type) {
+    const div = document.createElement("div");
+    div.className = "bubble " + type;
+    div.innerText = text;
+    chat.appendChild(div);
+    
+    // 滾動到最新訊息
+    setTimeout(() => {
+      window.scrollTo(0, document.body.scrollHeight);
+    }, 10);
+  }
+
+  function showTyping(show) {
+    typingIndicator.style.display = show ? "flex" : "none";
+    if (show) {
+      setTimeout(() => {
+        window.scrollTo(0, document.body.scrollHeight);
+      }, 10);
+    }
+  }
+
+  async function send() {
+    const text = input.value.trim();
+    if (!text) return;
+
+    addBubble(text, "user");
+    input.value = "";
+    
+    // Hide output if it was showing
+    output.style.display = "none";
+
+    showTyping(true);
+
+    try {
+      const res = await fetch("http://localhost:3000/chat", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ message: text })
+      });
+
+      if (!res.ok) {
+        throw new Error("伺服器錯誤");
+      }
+
+      const data = await res.json();
+
+      showTyping(false);
+
+      if (data.done) {
+        // Show the synthesized output
+        addBubble("好的，我已經根據你的需求產出三種設計方向：", "ai");
+        
+        outputContent.innerText = data.reply;
+        output.style.display = "block";
+      } else {
+        // Continue the interview
+        addBubble(data.reply, "ai");
+      }
+
+    } catch (error) {
+      showTyping(false);
+      addBubble("抱歉，發生錯誤。請確認伺服器正在運行，或稍後再試。", "ai");
+      console.error(error);
+    }
+  }
+
+  async function resetChat() {
+    try {
+      await fetch("http://localhost:3000/reset", {
+        method: "POST"
+      });
+    } catch (e) {
+      // Ignore reset errors
+    }
+    
+    chat.innerHTML = "";
+    output.style.display = "none";
+    typingIndicator.style.display = "none";
+    
+    // 重設檔案上傳狀態
+    projectContextText = "";
+    projectContext.classList.remove("visible");
+    fileBtnSmall.classList.remove("has-file");
+    fileInput.value = "";
+    
+    // Start new conversation
+    addBubble("你好！我是你的 AI 設計總監。", "ai");
+    
+    setTimeout(() => {
+      addBubble("請告訴我你想要什麼類型的網站？可以是任何想法、感覺、或你想要呈現的體驗。", "ai");
+    }, 600);
+  }
+
+  function exportChat() {
+    // 收集所有對話
+    const bubbles = chat.querySelectorAll(".bubble");
+    let content = "# AI Web Enhancer 對話記錄\n\n";
+    content += `匯出時間：${new Date().toLocaleString('zh-TW')}\n\n`;
+    
+    if (projectContextText) {
+      content += "## 專案背景\n\n" + projectContextText + "\n\n";
+    }
+    
+    content += "---\n\n## 對話記錄\n\n";
+    
+    bubbles.forEach((bubble) => {
+      const isUser = bubble.classList.contains("user");
+      const role = isUser ? "👤 你" : "🤖 AI";
+      content += `### ${role}\n\n${bubble.innerText}\n\n`;
+    });
+    
+    // 如果有輸出，也加入
+    if (output.style.display !== "none" && outputContent.innerText) {
+      content += "---\n\n## 設計方向產出\n\n" + outputContent.innerText + "\n";
+    }
+    
+    // 建立下載連結
+    const blob = new Blob([content], { type: "text/markdown;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `AWE對話記錄_${new Date().toISOString().slice(0,10)}.md`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+
+  // Initial greeting
+  addBubble("你好！我是你的 AI 設計總監。", "ai");
+  
+  setTimeout(() => {
+    addBubble("請告訴我你想要什麼類型的網站？可以是任何想法、感覺、或你想要呈現的體驗。", "ai");
+  }, 600);
+
+</script>
+
+</body>
+</html>
