@@ -16,11 +16,26 @@ app.use(cors());
 app.use(express.json());
 
 // Serve static files (for Vercel deployment)
-app.use(express.static("."));
+app.use(express.static(".", {
+  setHeaders: (res, path) => {
+    if (path.endsWith('.png')) {
+      res.setHeader('Content-Type', 'image/png');
+    }
+  }
+}));
 
 // Serve index.html for root route
 app.get("/", (req, res) => {
   res.sendFile(__dirname + "/index.html");
+});
+
+// Serve static PNG files explicitly
+app.get("/AWE-logo.png", (req, res) => {
+  res.sendFile(__dirname + "/AWE-logo.png");
+});
+
+app.get("/AWE-icon.png", (req, res) => {
+  res.sendFile(__dirname + "/AWE-icon.png");
 });
 
 // 初始化 Gemini (使用 .env 中的 OPENAI_API_KEY 作為 Google API Key)
