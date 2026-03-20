@@ -38,8 +38,8 @@ app.get("/AWE-icon.png", (req, res) => {
   res.sendFile(__dirname + "/AWE-icon.png");
 });
 
-// 初始化 Gemini (使用 .env 中的 OPENAI_API_KEY 作為 Google API Key)
-const genAI = new GoogleGenerativeAI(process.env.OPENAI_API_KEY);
+// 初始化 Gemini (使用 .env 中的 GEMINI_API_KEY)
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
 // Interview system prompt - The Interviewer role
 const INTERVIEWER_SYSTEM_PROMPT = `
