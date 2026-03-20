@@ -448,6 +448,11 @@
 </div>
 
 <script>
+  // 動態偵測 API URL（支援本地和 Vercel 生產環境）
+  const API_BASE = window.location.hostname === "localhost" 
+    ? "http://localhost:3000" 
+    : "";
+
   const chat = document.getElementById("chat");
   const input = document.getElementById("input");
   const output = document.getElementById("output");
@@ -486,7 +491,7 @@
 
       try {
         // 發送到伺服器建立專案背景
-        await fetch("http://localhost:3000/context", {
+        await fetch(API_BASE + "/context", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ context: projectContextText, fileName: file.name })
@@ -544,7 +549,7 @@
     showTyping(true);
 
     try {
-      const res = await fetch("http://localhost:3000/chat", {
+      const res = await fetch(API_BASE + "/chat", {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
@@ -580,7 +585,7 @@
 
   async function resetChat() {
     try {
-      await fetch("http://localhost:3000/reset", {
+      await fetch(API_BASE + "/reset", {
         method: "POST"
       });
     } catch (e) {
